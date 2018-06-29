@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<title>Tree shaking with reexports</title>
+</head>
+<body>
+	<script>
+		window.assert = window.parent.assert;
+		window.done = window.parent.done;
+	</script>
+	<script
+		main="~/uses-core"
+		src="../../../steal-with-promises.js"
+		data-base-url="."
+		data-config="package.json!npm"></script>
+	<script>
+		function assertCore() {
+			//window.APP = { DefineList, DefineMap, stache };
+
+
+			// These should have been removed TODO
+			//var mod = steal.loader.get("shake@1.0.0#mod");
+			//var modB = steal.loader.get("shake@1.0.0#mod_b");
+
+			if(typeof window.assert !== "undefined") {
+				assert.ok(window.APP.DefineList, "Got DefineList");
+				assert.ok(window.APP.DefineMap, "Got DefineMap");
+				assert.ok(window.APP.stache, "got stache");
+
+				// TODO assert shaken stuff
+			} else {
+				console.log("APP", window.APP);
+			}
+		}
+
+		function assertOther() {
+			var mod = steal.loader.get("shake@1.0.0#mod");
+			var modA = steal.loader.get("shake@1.0.0#mod_a");
+			var modB = steal.loader.get("shake@1.0.0#mod_b");
+			var modC = steal.loader.get("shake@1.0.0#mod_c");
+
+			if(typeof window.assert !== "undefined") {
+				window.assert.equal(mod.a, "a", "a was not tree shaken");
+				window.assert.equal(mod.b, "b", "b not tree shaken");
+				window.assert.equal(mod.c, undefined, "c still tree shaken");
+
+				window.assert.equal(modA.default, "a", "a is still present");
+				window.assert.equal(modB.default, "b", "b exists now");
+				window.assert.equal(modC, undefined, "c was not loaded at all");
+			} else {
+				console.log("mod", mod);
+				console.log("mod_b", modB);
+				console.log("mod_c", modC);
+			}
+		}
+
+		steal.done()
+		.then(assertCore)
+		/*.then(function(){
+			return steal.import("~/main");
+		})
+		.then(assertMain)*/
+		.then(function(){
+			if(window.assert) {
+				window.done();
+			}
+		});
+	</script>
+</body>
+</html>
